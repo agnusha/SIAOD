@@ -4,11 +4,11 @@ namespace SIAOD
 {
     //  Необходимо реализовать очередь на базе списков, применяя комбинированный алгоритм для ее обслуживания.
     //  Затем продемонстрировать выполнение основных операций с элементами очереди: поиск, добавление, удаление.
-    
+
     class Program
     {
         //класс узла - наш объект в очереди
-        public class Node<T> 
+        public class Node<T>
         {
             // следующий узел
             public Node<T> next;
@@ -17,24 +17,21 @@ namespace SIAOD
             // приоритет
             public int? priority;
             
+            public Node()
+            {
+            }
+
             public Node(T data)
             {
                 this.data = data;
                 this.next = null;
-            }
-            
-            public Node(T data, int priority, Node<T> next)
-            {
-                this.data = data;
-                this.next = next;
-                this.priority = priority;
             }
         }
 
         public class Queue<T>
         {
             //голова очереди
-            private Node<T> _head; 
+            private Node<T> _head;
 
             //добавление узла без приоритета
             public void AddNodeWithoutPriority(T data)
@@ -42,7 +39,7 @@ namespace SIAOD
                 //если очередь пустая - создаем, устанавливает голову
                 if (_head == null)
                 {
-                    _head = new Node<T>(data); 
+                    _head = new Node<T>(data);
                 }
                 else
                 {
@@ -53,12 +50,12 @@ namespace SIAOD
                     createdNode.next = new Node<T>(data);
                 }
             }
-            
+
             //добавление узла с приоритетом
             public Node<T> AddNodeWithPriority(T data, int priority)
             {
                 // вначале ссылка на предыдущий узел null
-                Node<T> previous = null; 
+                Node<T> previous = null;
                 var node = _head;
 
                 // итерация по очереди, пока не достигнут конец или более высокий приоритет
@@ -69,10 +66,15 @@ namespace SIAOD
                 }
 
                 //создаем узел
-                var createdNode = new Node<T>(data, priority, node);
+                var createdNode = new Node<T>()
+                {
+                    data = data,
+                    next = node,
+                    priority = priority
+                }; 
 
                 //если не сделали итераций, добавляем в начало
-                if (previous == null) 
+                if (previous == null)
                 {
                     _head = createdNode;
                     return _head;
@@ -84,26 +86,42 @@ namespace SIAOD
 
 
             //поиск по значению
-            public int FindNodePosition(T data)
+            public void FindNodePosition(T data)
             {
-                var node = _head;
-                var i = 0;
-
-                //цикл while проходит по очереди пока не найдет результ
-                while (node.next != null && !node.data.Equals(data))
+                int GetNodePosition(T nodeData)
                 {
-                    //меняем указатель на след элемент
-                    node = node.next;
-                    i++;
+                    var node = _head;
+                    var i = 0;
+
+                    //цикл while проходит по очереди пока не найдет результ
+                    while (node.next != null && !node.data.Equals(nodeData))
+                    {
+                        //меняем указатель на след элемент
+                        node = node.next;
+                        i++;
+                    }
+
+                    // нет узла - возвращаем -1
+                    if (node.next == null && !node.data.Equals(nodeData))
+                    {
+                        i = -1;
+                    }
+
+                    return i;
                 }
 
-                // нет узла - возвращаем -1
-                if (node.next == null && !node.data.Equals(data))
+                void WriteInformation(int nodePosition)
                 {
-                    i = -1;
+                    Console.WriteLine($"Element {data} is in the position {nodePosition}");
+                    Console.WriteLine("-------------");
+                    Console.WriteLine();
+
+
                 }
 
-                return i;
+                var position = GetNodePosition(data);
+                WriteInformation(position);
+
             }
 
 
@@ -120,6 +138,8 @@ namespace SIAOD
                     node = node.next;
                 }
 
+                Console.WriteLine("Deleted element " + data);
+
                 // переставляем указатели, тем самым удаляя
                 previous.next = node.next;
             }
@@ -128,7 +148,7 @@ namespace SIAOD
             public void WriteInfo()
             {
                 Console.WriteLine("Queue:");
-                
+
                 var node = _head;
                 //цикл while проходит по очереди
                 while (node != null)
@@ -138,6 +158,8 @@ namespace SIAOD
                 }
                 Console.WriteLine();
                 Console.WriteLine("-------------");
+                Console.WriteLine();
+
             }
 
         }
@@ -146,25 +168,24 @@ namespace SIAOD
         {
             var testQueue = new Queue<string>();
 
-            // Добавление текстовых сообщений для обработки в очередь
-            testQueue.AddNodeWithoutPriority("Hello!");
-            testQueue.AddNodeWithoutPriority("How are you?");
-            testQueue.AddNodeWithPriority("This is important!", 2);
-            testQueue.AddNodeWithPriority("Check it when possible", 1);
-            testQueue.AddNodeWithoutPriority("Did you see the news?");
-            testQueue.AddNodeWithPriority("We need you ASAP!!", 3);
-            testQueue.AddNodeWithPriority("Come to me", 1);
+            // добавим узлы с приоритетами и без
+            testQueue.AddNodeWithoutPriority("1: Без приоритета");
+            testQueue.AddNodeWithoutPriority("3: Без приоритета");
+            testQueue.AddNodeWithPriority("4: Приоритет 3 - наивысший", 3);
+            testQueue.AddNodeWithoutPriority("5: Без приоритета");
+            testQueue.AddNodeWithPriority("6: Приоритет 2", 2);
+            testQueue.AddNodeWithPriority("7: Приоритет 2", 2);
+            testQueue.AddNodeWithPriority("8: Приоритет 1", 1);
+
 
             testQueue.WriteInfo();
 
-            // Получения индекса сообщения в очереди
-            var msg = "Did you see the news?";
-            var msgIndex = testQueue.FindNodePosition(msg);
-            Console.WriteLine("Your message \"" + msg + "\" is " + msgIndex + " in the queue");
+            // поиск по значению
+            const string searchElement = "5: Без приоритета";
+            testQueue.FindNodePosition(searchElement);
 
-            // Удаление сообщений из очереди
-            testQueue.DeleteNode("Did you see the news?");
-            testQueue.DeleteNode("Come to me");
+            // удаление узла
+            testQueue.DeleteNode("5: Без приоритета");
 
             testQueue.WriteInfo();
 
