@@ -1,136 +1,183 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SIAOD
 {
     class Program
     {
-        // Var 11. Создать два однонаправленных списка, состоящих из n символов латинского алфавита.
-        // Переместить все данные в третий список таким образом, чтобы сначала шли все строчные
-        // символы из обоих списков, а затем – прописные.
+        //  Необходимо реализовать очередь на базе списков, применяя комбинированный алгоритм для ее обслуживания.
+        //  Затем продемонстрировать выполнение основных операций с элементами очереди: поиск, добавление, удаление.
 
-        //класс узла - наш объект в списке
-        public class Node<T>
+        /*
+         * Перечисление приоритетов узлов.
+         * Чем больше число, тем выше приоритет
+         */
+        public enum Priority
         {
-            //конструктор
+            LOW = 1, // Низкий
+            MEDIUM = 2, // Средний
+            HIGH = 3 // Высокий
+        }
+
+        //класс узла - наш объект в очереди
+        public class Node<T> 
+        {
+            // следующий узел
+            public Node<T> next;
+            // данные
+            public T data;
+            // приоритет
+            public Priority? priority;
+            
             public Node(T data)
             {
-                Data = data;
+                this.data = data;
+                this.next = null;
             }
-
-            //данные
-            public T Data { get; set; }
-            //указатель на следующий элемент
-            public Node<T> Next { get; set; }
+            
+            public Node(T data, Priority priority, Node<T> next)
+            {
+                this.data = data;
+                this.next = next;
+                this.priority = priority;
+            }
         }
 
-        // класс - односвязный список
-        public class LinkedList<T> : IEnumerable<T>  
+        public class Queue<T>
         {
-            private Node<T> _head; // головной/первый элемент
-            private Node<T> _tail; // последний/хвостовой элемент
+            //голова очереди
+            private Node<T> _head; 
 
-            // добавление элемента
-            public void Add(T data)
+            //добавление узла без приоритета
+            public void AddNodeWithoutPriority(T data)
             {
-                var node = new Node<T>(data);
-
+                //если очередь пустая - создаем, устанавливает голову
                 if (_head == null)
-                    _head = node;
+                {
+                    _head = new Node<T>(data); 
+                }
                 else
-                    _tail.Next = node;
-                _tail = node;
-            }
-
-            // вывод информации
-            public void WriteList()
-            {
-                Console.WriteLine("-------------");
-                Console.WriteLine("List:");
-                foreach (var item in this)
                 {
-                    Console.WriteLine(item);
+                    var createdNode = _head;
+                    // цикл while на поиск последнего узла очереди
+                    while (createdNode.next != null) createdNode = createdNode.next;
+                    //устанавливаем указатель на созданный узел
+                    createdNode.next = new Node<T>(data);
                 }
-                Console.WriteLine("-------------");
             }
-
-            // implement IEnumerable
-            IEnumerator IEnumerable.GetEnumerator()
+            
+            //добавление узла с приоритетом
+            public Node<T> AddNodeWithPriority(T data, Priority priority)
             {
-                return ((IEnumerable)this).GetEnumerator();
-            }
-
-            IEnumerator<T> IEnumerable<T>.GetEnumerator()
-            {
+                Node<T> previous = null; // ссылка на предыдущий узел
                 var current = _head;
-                while (current != null)
+
+                // итерация по очереди, пока не достигнут конец или более высокий приоритет
+                while (current != null && current.priority >= priority)
                 {
-                    yield return current.Data;
-                    current = current.Next;
+                    previous = current;
+                    current = current.next;
                 }
+
+                //создаем узел
+                var createdNode = new Node<T>(data, priority, current);
+
+                //если не сделали итераций, добавляем в начало
+                if (previous == null) 
+                {
+                    _head = createdNode;
+                    return _head;
+                }
+
+                previous.next = createdNode;
+                return createdNode;
             }
-        }
 
-        public static class ListHelpers
-        {
-            private const string Alphabet = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz";
 
-            // заполнение списка
-            public static LinkedList<char> CreateLinkedList(int n)
+            //поиск по значению
+            public int FindNodePosition(T data)
             {
-                // создаем пустой список
-                var list = new LinkedList<char>();
+                var node = _head;
+                var i = 0;
 
-                foreach (var i in Enumerable.Range(0, n))
+                //цикл while проходит по очереди пока не найдет результ
+                while (node.next != null && !node.data.Equals(data))
                 {
-                    // добавляем элементы в список
-                    list.Add(Alphabet[i]);
+                    //меняем указатель на след элемент
+                    node = node.next;
+                    i++;
                 }
-                return list;
+
+                // нет узла - возвращаем -1
+                if (node.next == null && !node.data.Equals(data))
+                {
+                    i = -1;
+                }
+
+                return i;
             }
 
 
-            // перемещаем в третий список: сначала строчные символы из обоих списков, а затем – прописные.
-            public static LinkedList<char> MoveToResultLinkedList(LinkedList<char> list1, LinkedList<char> list2)
+            //удаление узла
+            public void DeleteNode(T data)
             {
-                // соединяем два списка
-                static LinkedList<char> MergeLinkedList(LinkedList<char> list1, LinkedList<char> list2)
+                var node = _head;
+                Node<T> previous = null;
+
+                //цикл while проходит по очереди пока не найдет результ
+                while (node != null && !node.data.Equals(data))
                 {
-                    foreach (var item in list2) list1.Add(item);
-                    return list1;
+                    previous = node;
+                    node = node.next;
                 }
 
-                //создаем пустой список
-                var lowerCase = new LinkedList<char>();
-                var upperCase = new LinkedList<char>();
-
-                foreach (var item in MergeLinkedList(list1, list2))
-                {
-                    if (char.IsLower(item))
-                        lowerCase.Add(item);
-                    else
-                        upperCase.Add(item);
-                }
-
-                return MergeLinkedList(lowerCase, upperCase);
+                // переставляем указатели, тем самым удаляя
+                previous.next = node.next;
             }
+
+            //вывод информации о очереди
+            public void WriteInfo()
+            {
+                Console.WriteLine("Queue:");
+                
+                var node = _head;
+                //цикл while проходит по очереди
+                while (node != null)
+                {
+                    Console.Write(node.data + " ---> ");
+                    node = node.next;
+                }
+                Console.WriteLine();
+                Console.WriteLine("-------------");
+            }
+
         }
 
         static void Main(string[] args)
         {
-            // ввод данных для первого списка
-            Console.WriteLine("Hi. Write n - count element of first list");
-            var list1 = ListHelpers.CreateLinkedList(Convert.ToInt32(Console.ReadLine()));
+            var testQueue = new Queue<string>();
 
-            // ввод данных для второго списка
-            Console.WriteLine("Write n - count element of second list");
-            var list2 = ListHelpers.CreateLinkedList(Convert.ToInt32(Console.ReadLine()));
-            
-            //получение и вывод результата
-            var list3 = ListHelpers.MoveToResultLinkedList(list1, list2);
-            list3.WriteList();
+            // Добавление текстовых сообщений для обработки в очередь
+            testQueue.AddNodeWithoutPriority("Hello!");
+            testQueue.AddNodeWithoutPriority("How are you?");
+            testQueue.AddNodeWithPriority("This is important!", Priority.MEDIUM);
+            testQueue.AddNodeWithPriority("Check it when possible", Priority.LOW);
+            testQueue.AddNodeWithoutPriority("Did you see the news?");
+            testQueue.AddNodeWithPriority("We need you ASAP!!", Priority.HIGH);
+            testQueue.AddNodeWithPriority("Come to me", Priority.LOW);
+
+            testQueue.WriteInfo();
+
+            // Получения индекса сообщения в очереди
+            var msg = "Did you see the news?";
+            var msgIndex = testQueue.FindNodePosition(msg);
+            Console.WriteLine("Your message \"" + msg + "\" is " + msgIndex + " in the queue");
+
+            // Удаление сообщений из очереди
+            testQueue.DeleteNode("Did you see the news?");
+            testQueue.DeleteNode("Come to me");
+
+            testQueue.WriteInfo();
+
         }
     }
 }
