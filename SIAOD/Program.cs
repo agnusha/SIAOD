@@ -2,22 +2,11 @@
 
 namespace SIAOD
 {
+    //  Необходимо реализовать очередь на базе списков, применяя комбинированный алгоритм для ее обслуживания.
+    //  Затем продемонстрировать выполнение основных операций с элементами очереди: поиск, добавление, удаление.
+    
     class Program
     {
-        //  Необходимо реализовать очередь на базе списков, применяя комбинированный алгоритм для ее обслуживания.
-        //  Затем продемонстрировать выполнение основных операций с элементами очереди: поиск, добавление, удаление.
-
-        /*
-         * Перечисление приоритетов узлов.
-         * Чем больше число, тем выше приоритет
-         */
-        public enum Priority
-        {
-            LOW = 1, // Низкий
-            MEDIUM = 2, // Средний
-            HIGH = 3 // Высокий
-        }
-
         //класс узла - наш объект в очереди
         public class Node<T> 
         {
@@ -26,7 +15,7 @@ namespace SIAOD
             // данные
             public T data;
             // приоритет
-            public Priority? priority;
+            public int? priority;
             
             public Node(T data)
             {
@@ -34,7 +23,7 @@ namespace SIAOD
                 this.next = null;
             }
             
-            public Node(T data, Priority priority, Node<T> next)
+            public Node(T data, int priority, Node<T> next)
             {
                 this.data = data;
                 this.next = next;
@@ -66,7 +55,7 @@ namespace SIAOD
             }
             
             //добавление узла с приоритетом
-            public Node<T> AddNodeWithPriority(T data, Priority priority)
+            public Node<T> AddNodeWithPriority(T data, int priority)
             {
                 // вначале ссылка на предыдущий узел null
                 Node<T> previous = null; 
@@ -160,11 +149,11 @@ namespace SIAOD
             // Добавление текстовых сообщений для обработки в очередь
             testQueue.AddNodeWithoutPriority("Hello!");
             testQueue.AddNodeWithoutPriority("How are you?");
-            testQueue.AddNodeWithPriority("This is important!", Priority.MEDIUM);
-            testQueue.AddNodeWithPriority("Check it when possible", Priority.LOW);
+            testQueue.AddNodeWithPriority("This is important!", 2);
+            testQueue.AddNodeWithPriority("Check it when possible", 1);
             testQueue.AddNodeWithoutPriority("Did you see the news?");
-            testQueue.AddNodeWithPriority("We need you ASAP!!", Priority.HIGH);
-            testQueue.AddNodeWithPriority("Come to me", Priority.LOW);
+            testQueue.AddNodeWithPriority("We need you ASAP!!", 3);
+            testQueue.AddNodeWithPriority("Come to me", 1);
 
             testQueue.WriteInfo();
 
