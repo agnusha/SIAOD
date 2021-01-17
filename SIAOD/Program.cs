@@ -68,18 +68,19 @@ namespace SIAOD
             //добавление узла с приоритетом
             public Node<T> AddNodeWithPriority(T data, Priority priority)
             {
-                Node<T> previous = null; // ссылка на предыдущий узел
-                var current = _head;
+                // вначале ссылка на предыдущий узел null
+                Node<T> previous = null; 
+                var node = _head;
 
                 // итерация по очереди, пока не достигнут конец или более высокий приоритет
-                while (current != null && current.priority >= priority)
+                while (node != null && node.priority >= priority)
                 {
-                    previous = current;
-                    current = current.next;
+                    previous = node;
+                    node = node.next;
                 }
 
                 //создаем узел
-                var createdNode = new Node<T>(data, priority, current);
+                var createdNode = new Node<T>(data, priority, node);
 
                 //если не сделали итераций, добавляем в начало
                 if (previous == null) 
