@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
 
 namespace SIAOD
 {
-    //Ввести 10-15 целых чисел и построить из них с помощью указателей бинарное дерево поиска.
-    //Обойти его прямым, симметричным и обратным способами.
-    //Реализовать процедуры поиска, вставки и удаления элементов  бинарного дерева поиска.
+    // Ввести 10-15 целых чисел и построить из них бинарное дерево поиска.
+    //1.  Выполнить симметричную прошивку бинарного дерева поиска.Обойти его согласно симметричному порядку следования элементов. Реализовать вставку и удаление элементов из симметрично прошитого бинарного дерева.
+    //2.  Выполнить прямую прошивку бинарного дерева поиска. Обойти его согласно прямому порядку следования элементов.Реализовать вставку и удаление элементов из прямо прошитого бинарного дерева.
+
 
 
     class Program
@@ -19,200 +18,286 @@ namespace SIAOD
             //указатали
             public Node* left;
             public Node* right;
-            public Node* parent;
+
+            //тип связи
+            //false - прошивочная нить
+            public bool isNoThreadLeft;
+            public bool isNoThreadRight;
         }
 
+        //Прошитое бинароное дерево поиска
         public unsafe class Tree
         {
-            //указатель на вершину дерева
-
-            public Node* Root { get; private set; }
-
-            //конструктор
-            public Tree()
+            // Вставка
+            public Node* Insert(Node* rootNode, Node* newNode)
             {
-                Root = null;
-            }
+                Node* par = null;
+                var node = rootNode;
 
-            public void Add(Node* node)
-            {
-                // дерево пустое
-                //устанавливаем вершину
-                if (Root == null)
+                while (node != null)
                 {
-                    Root = node;
-                    return;
-                }
-
-                var currentNode = Root;
-                while (node->parent == null)
-                {
-                    // цикл по левой ветке
-                    if (currentNode->data > node->data)
+                    par = node;
+                    // в левое поддерево
+                    if (newNode->data < node->data)
                     {
-                        // если левая ветка пустая
-                        if (currentNode->left == null)
+                        //если дерево не прошитое, то меняем указатель 
+                        if (node->isNoThreadLeft == false)
                         {
-                            currentNode->left = node;
-                            node->parent = currentNode;
+                            node = node->left;
                         }
-                        // переход к другой вершине
                         else
                         {
-                            currentNode = currentNode->left;
+                            break;
                         }
                     }
-                    // цикл по правой ветке
+                    // в правое поддерево
                     else
                     {
-                        // если правая ветка пустая
-                        if (currentNode->right == null)
+                        if (node->isNoThreadRight == false)
                         {
-                            currentNode->right = node;
-                            node->parent = currentNode;
+                            node = node->right;
                         }
-                        // переход к другой вершине
                         else
                         {
-                            currentNode = currentNode->right;
+                            break;
                         }
                     }
                 }
-            }
-
-            // высота дерева
-            public int GetTreeHeight(Node* root)
-            {
-                if (root == null) return 0;
-
-                // запускаем рекурсию
-                var treeHeightLeft = GetTreeHeight(root->left);
-                var treeHeightRight = GetTreeHeight(root->right);
-
-                return treeHeightLeft > treeHeightRight ? treeHeightLeft + 1 : treeHeightRight + 1;
-            }
-
-            //вывод информации о строке по указанной высота
-            private static void WriteRowInformation(Node* root, int height)
-            {
-                if (root == null) return;
-
-                if (height == 1)
+                //дерево пустое, добавляем в корень
+                if (par == null)
                 {
-                    Console.Write($"{root->data} ");
+                    rootNode = newNode;
+                    newNode->left = null;
+                    newNode->right = null;
                 }
-                else if (height > 1)
+                //вставляем как левый потомок родителя
+                else if (newNode->data < par->data)
                 {
-                    //идем в левое поддерево
-                    WriteRowInformation(root->left, height - 1);
-                    //идем в правое поддерево
-                    WriteRowInformation(root->right, height - 1);
-                }
-            }
-
-            // Прямой обход дерева
-            public void PreOrderTraversal(Node* root)
-            {
-                for (var i = 0; i <= GetTreeHeight(root); i++)
-                {
-                    WriteRowInformation(root, i);
-                    Console.WriteLine();
-                }
-            }
-
-            // Обратный обход дерева
-            public void PostOrderTraversal(Node* root)
-            {
-                for (var i = GetTreeHeight(root); i >= 1; i--)
-                {
-                    WriteRowInformation(root, i);
-                    Console.WriteLine();
-                }
-            }
-
-            // Симетричный обход дерева рекурсивно
-            public void SymmetricTreeTraversal(Node* root)
-            {
-                if (root == null) return;
-
-                //идем в левое поддерево
-                SymmetricTreeTraversal(root->left);
-                Console.Write(root->data + " ");
-                //идем в правое поддерево
-                SymmetricTreeTraversal(root->right);
-            }
-
-            public Node* SearchNode(int value)
-            {
-                var currentNode = Root;
-                while (currentNode != null)
-                {
-                    //найден результат
-                    if (currentNode->data == value)
-                    {
-                        return currentNode;
-                    }
-
-                    //идем в левое поддерево
-                    if (currentNode->data > value)
-                    {
-                        currentNode = currentNode->left;
-                    }
-                    //идем в правое поддерево
-                    else
-                    {
-                        currentNode = currentNode->right;
-                    }
-                }
-                //не нашли
-                return null;
-            }
-
-
-
-            public Node* Remove(Node* root, int data)
-            {
-                // поиск минимального через рекурсию
-                static Node* getMinNode(Node* root)
-                {
-                    if (root->left == null)
-                    {
-                        return root;
-                    }
-
-                    return getMinNode(root->left);
-                }
-                
-                if (root == null) return null;
-
-                //идем в левое поддерево
-                if (data < root->data)
-                {
-                    root->left = Remove(root->left, data);
-                }
-                else if (data > root->data)
-                {
-                    root->right = Remove(root->right, data);
-                }
-                else if (root->left != null && root->right != null)
-                {
-                    //искомый  элемент в корне текущего поддерева
-                    root->data = getMinNode(root->right)->data;
-                    root->right = Remove(root->right, root->data);
+                    newNode->left = par->left;
+                    newNode->right = par;
+                    par->isNoThreadLeft = false;
+                    par->left = newNode;
                 }
                 else
                 {
-                    if (root->left != null)
+                    newNode->left = par;
+                    newNode->right = par->right;
+                    par->isNoThreadRight = false;
+                    par->right = newNode;
+                }
+
+                return rootNode;
+            }
+
+            // возвращает наследника использую правую ветку
+            private Node* OrderSuccessor(Node* ptr)
+            {
+                // идем в правое поддерево
+                if (ptr->isNoThreadRight)
+                {
+                    return ptr->right;
+                }
+
+                // идем в левое поддерево
+                ptr = ptr->right;
+                while (ptr->isNoThreadLeft == false)
+                {
+                    ptr = ptr->left;
+                }
+
+                return ptr;
+            }
+
+            // выводимм дерево
+            public void OrderTraversal(Node* root)
+            {
+                if (root == null)
+                {
+                    return;
+                }
+
+                // находим левую ноду
+                Node* ptr = root;
+                while (ptr->isNoThreadLeft == false)
+                {
+                    ptr = ptr->left;
+                }
+
+                // печатаем
+                while (ptr != null)
+                {
+                    Console.Write(ptr->data + " ");
+                    ptr = OrderSuccessor(ptr);
+                }
+            }
+
+            // удаление 
+            public Node* RemoveNode(Node* rootNode, int data)
+            {
+                var isFoundElement = false;
+                Node* par = null, ptr = rootNode;
+
+                // цикл
+                while (ptr != null)
+                {
+                    //нашли - выходим
+                    if (data == ptr->data)
                     {
-                        root = Root->left;
+                        isFoundElement = true;
+                        break;
                     }
-                    else if (root->right != null)
+
+                    par = ptr;
+                    if (data < ptr->data)
                     {
-                        root = root->right;
+                        if (ptr->isNoThreadLeft == false)
+                            //устанавливаем указатель на левого потомка
+                            ptr = ptr->left;
+                        else
+                            break;
                     }
                     else
                     {
-                        root = null;
+                        if (ptr->isNoThreadRight == false)
+                            //устанавливаем указатель на правого потомка
+                            ptr = ptr->right;
+                        else
+                            break;
+                    }
+                }
+
+                if (isFoundElement == false)
+                {
+                    Console.WriteLine("Нет искомого элемента");
+                }
+                // ситуация когда два потомка
+                else if (ptr->isNoThreadLeft == false && ptr->isNoThreadRight == false)
+                {
+                    rootNode = caseC(rootNode, ptr);
+                }
+                // только левый потом
+                else if (ptr->isNoThreadLeft == false)
+                {
+                    rootNode = caseB(rootNode, par, ptr);
+                }
+                // только правый потомок
+                else if (ptr->isNoThreadRight == false)
+                {
+                    rootNode = caseB(rootNode, par, ptr);
+                }
+                // нету потомков
+                else
+                {
+                    rootNode = caseA(rootNode, par, ptr);
+                }
+
+                return rootNode;
+            }
+
+            // удаление левого листа
+            public Node* caseA(Node* root, Node* par, Node* ptr)
+            {
+                // если нода для удаления вершина
+                if (par == null)
+                    root = null;
+
+                // левая или родитель
+                else if (ptr == par->left)
+                {
+                    par->isNoThreadLeft = true;
+                    par->left = ptr->left;
+                }
+                else
+                {
+                    par->isNoThreadRight = true;
+                    par->right = ptr->right;
+                }
+
+                return root;
+            }
+
+            // нода для удаления имеет только одного потомка
+            private Node* caseB(Node* root, Node* par,
+                Node* ptr)
+            {
+
+                // находим преемника
+                Node* inSucc(Node* ptr)
+                {
+                    if (ptr->isNoThreadRight)
+                    {
+                        return ptr->right;
+                    }
+
+                    ptr = ptr->right;
+                    while (ptr->isNoThreadLeft == false)
+                    {
+                        ptr = ptr->left;
+                    }
+
+                    return ptr;
+                }
+
+                // находим предшественника 
+                Node* inPred(Node* ptr)
+                {
+                    if (ptr->isNoThreadLeft == true)
+                    {
+                        return ptr->left;
+                    }
+
+                    ptr = ptr->left;
+                    while (ptr->isNoThreadRight == false)
+                    {
+                        ptr = ptr->right;
+                    }
+
+                    return ptr;
+                }
+                
+                Node* child;
+
+                // имеет только левого потомка
+                if (ptr->isNoThreadLeft == false)
+                {
+                    child = ptr->left;
+                }
+                // только правый потомок
+                else
+                {
+                    child = ptr->right;
+                }
+
+                // вершина
+                if (par == null)
+                {
+                    root = child;
+                }
+                // нода для удаления левый ребенок родителя
+                else if (ptr == par->left)
+                {
+                    par->left = child;
+                }
+                else
+                {
+                    par->right = child;
+                }
+
+                // находим приемника и предшественника
+                var s = inSucc(ptr);
+                var p = inPred(ptr);
+
+                // If ptr has left subtree.
+                if (ptr->isNoThreadLeft == false)
+                {
+                    p->right = s;
+                }
+                // если существует правая ветка
+                else
+                {
+                    if (ptr->isNoThreadRight == false)
+                    {
+                        s->left = p;
                     }
                 }
 
@@ -220,65 +305,69 @@ namespace SIAOD
             }
 
 
+
+
+            // ситуация когда у ноды для удаления два наследника
+            Node* caseC(Node* root, Node* ptr)
+            {
+                // находим родителя
+                Node* parsucc = ptr;
+                Node* succ = ptr->right;
+
+                // находим левого потомка наследника
+                while (succ->isNoThreadLeft == false)
+                {
+                    parsucc = succ;
+                    succ = succ->left;
+                }
+
+                ptr->data = succ->data;
+
+                if (succ->isNoThreadLeft == true && succ->isNoThreadRight == true)
+                {
+                    root = caseA(root, parsucc, succ);
+                }
+                else
+                {
+                    root = caseB(root, parsucc, succ);
+                }
+
+                return root;
+            }
         }
 
-        static unsafe void Main(string[] args)
+    static unsafe void Main(string[] args)
         {
-            var node1 = new Node { data = 11 };
-            var node2 = new Node { data = 8 };
-            var node3 = new Node { data = 13 };
-            var node4 = new Node { data = 6 };
-            var node5 = new Node { data = 9 };
-            var node6 = new Node { data = 12 };
-            var node7 = new Node { data = 14 };
-            var node8 = new Node { data = 15 };
-            var node9 = new Node { data = 16 };
-            var node10 = new Node { data = 6 };
-
-
             var tree = new Tree();
-            tree.Add(&node1);
-            tree.Add(&node2);
-            tree.Add(&node3);
-            tree.Add(&node4);
-            tree.Add(&node5);
-            tree.Add(&node6);
-            tree.Add(&node7);
-            tree.Add(&node8);
-            tree.Add(&node9);
-            tree.Add(&node10);
 
-            //поиск
-            Console.WriteLine("Поиск элемента по значению: " + 11);
-            var result = tree.SearchNode(11);
-            Console.WriteLine("Левый потомок: " + result->left->data);
-            Console.WriteLine("Правый потомок: " + result->right->data);
-            Console.WriteLine("-----------");
+            // создание узлов
+            var root = new Node { data = 20, isNoThreadLeft = true, isNoThreadRight = true };
+            var node1 = new Node { data = 10, isNoThreadLeft = true, isNoThreadRight = true };
+            var node2 = new Node { data = 30, isNoThreadLeft = true, isNoThreadRight = true };
+            var node3 = new Node { data = 5, isNoThreadLeft = true, isNoThreadRight = true };
+            var node4 = new Node { data = 16, isNoThreadLeft = true, isNoThreadRight = true };
+            var node5 = new Node { data = 14, isNoThreadLeft = true, isNoThreadRight = true };
+            var node6 = new Node { data = 17, isNoThreadLeft = true, isNoThreadRight = true };
+            var node7 = new Node { data = 13, isNoThreadLeft = true, isNoThreadRight = true };
+            
+            //добавляем в дерево
+            var rootPointer = &root;
+            rootPointer = tree.Insert(null, rootPointer);
+            rootPointer = tree.Insert(rootPointer, &node1);
+            rootPointer = tree.Insert(rootPointer, &node2);
+            rootPointer = tree.Insert(rootPointer, &node3);
+            rootPointer = tree.Insert(rootPointer, &node4);
+            rootPointer = tree.Insert(rootPointer, &node5);
+            rootPointer = tree.Insert(rootPointer, &node6);
+            rootPointer = tree.Insert(rootPointer, &node7);
 
-            //удаление
+            // выводим дерево
+            tree.OrderTraversal(rootPointer);
+            // удаляем 20
+            tree.RemoveNode(rootPointer, 20);
             Console.WriteLine();
-            Console.WriteLine("Дерево:");
-            tree.PreOrderTraversal(tree.Root);
-            Console.WriteLine("Удаление элемента по значению: " + 16);
-            tree.Remove(tree.Root, 16);
-            Console.WriteLine("Дерево:");
-            tree.PreOrderTraversal(tree.Root);
-            Console.WriteLine("Полученная высота: " + tree.GetTreeHeight(tree.Root));
-            Console.WriteLine("-----------");
-
-            //обходы
-            Console.WriteLine();
-            Console.WriteLine("Прямой обход дерева");
-            tree.PreOrderTraversal(tree.Root);
-            Console.WriteLine("-----------");
-
-            Console.WriteLine("Обратный обход дерева");
-            tree.PostOrderTraversal(tree.Root);
-            Console.WriteLine("-----------");
-
-            Console.WriteLine("Симметричный обход дерева");
-            tree.SymmetricTreeTraversal(tree.Root);
-            Console.WriteLine();
+            // выводим
+            tree.OrderTraversal(rootPointer);
 
         }
     }
