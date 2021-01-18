@@ -1,194 +1,222 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace SIAOD
 {
     //  Необходимо реализовать очередь на базе списков, применяя комбинированный алгоритм для ее обслуживания.
     //  Затем продемонстрировать выполнение основных операций с элементами очереди: поиск, добавление, удаление.
 
+
+
+
     class Program
     {
-        //класс узла - наш объект в очереди
+        //класс узла - наш объект в стеке
         public class Node<T>
         {
             // следующий узел
             public Node<T> next;
             // данные
             public T data;
-            // приоритет
-            public int? priority;
-            
-            public Node()
-            {
-            }
 
             public Node(T data)
             {
                 this.data = data;
-                this.next = null;
             }
         }
 
-        public class Queue<T>
+        //стэк
+        public class Stack<T>
         {
-            //голова очереди
-            private Node<T> _head;
+            Node<T> head;
+            int count;
 
-            //добавление узла без приоритета
-            public void AddNodeWithoutPriority(T data)
+            public bool IsEmpty
             {
-                //если очередь пустая - создаем, устанавливает голову
-                if (_head == null)
-                {
-                    _head = new Node<T>(data);
-                }
-                else
-                {
-                    var createdNode = _head;
-                    // цикл while на поиск последнего узла очереди
-                    while (createdNode.next != null) createdNode = createdNode.next;
-                    //устанавливаем указатель на созданный узел
-                    createdNode.next = new Node<T>(data);
-                }
+                get { return count == 0; }
             }
 
-            //добавление узла с приоритетом
-            public Node<T> AddNodeWithPriority(T data, int priority)
+            public void Push(T item)
             {
-                // вначале ссылка на предыдущий узел null
-                Node<T> previous = null;
-                var node = _head;
-
-                // итерация по очереди, пока не достигнут конец или более высокий приоритет
-                while (node != null && node.priority >= priority)
-                {
-                    previous = node;
-                    node = node.next;
-                }
-
-                //создаем узел
-                var createdNode = new Node<T>()
-                {
-                    data = data,
-                    next = node,
-                    priority = priority
-                }; 
-
-                //если не сделали итераций, добавляем в начало
-                if (previous == null)
-                {
-                    _head = createdNode;
-                    return _head;
-                }
-
-                previous.next = createdNode;
-                return createdNode;
+                // увеличиваем стек
+                Node<T> node = new Node<T>(item);
+                node.next = head; // переустанавливаем верхушку стека на новый элемент
+                head = node;
+                count++;
             }
 
-
-            //поиск по значению
-            public void FindNodePosition(T data)
+            public T Pop()
             {
-                int GetNodePosition(T nodeData)
-                {
-                    var node = _head;
-                    var i = 0;
-
-                    //цикл while проходит по очереди пока не найдет результ
-                    while (node.next != null && !node.data.Equals(nodeData))
-                    {
-                        //меняем указатель на след элемент
-                        node = node.next;
-                        i++;
-                    }
-
-                    // нет узла - возвращаем -1
-                    if (node.next == null && !node.data.Equals(nodeData))
-                    {
-                        i = -1;
-                    }
-
-                    return i;
-                }
-
-                void WriteInformation(int nodePosition)
-                {
-                    Console.WriteLine($"Element {data} is in the position {nodePosition}");
-                    Console.WriteLine("-------------");
-                    Console.WriteLine();
-
-
-                }
-
-                var position = GetNodePosition(data);
-                WriteInformation(position);
-
+                // если стек пуст, выбрасываем исключение
+                if (IsEmpty)
+                    throw new InvalidOperationException("Стек пуст");
+                Node<T> temp = head;
+                head = head.next; // переустанавливаем верхушку стека на следующий элемент
+                count--;
+                return temp.data;
             }
 
-
-            //удаление узла
-            public void DeleteNode(T data)
+            public T Peek()
             {
-                var node = _head;
-                Node<T> previous = null;
-
-                //цикл while проходит по очереди пока не найдет результ
-                while (node != null && !node.data.Equals(data))
-                {
-                    previous = node;
-                    node = node.next;
-                }
-
-                Console.WriteLine("Deleted element " + data);
-
-                // переставляем указатели, тем самым удаляя
-                previous.next = node.next;
+                if (IsEmpty)
+                    throw new InvalidOperationException("Стек пуст");
+                return head.data;
             }
-
-            //вывод информации о очереди
-            public void WriteInfo()
-            {
-                Console.WriteLine("Queue:");
-
-                var node = _head;
-                //цикл while проходит по очереди
-                while (node != null)
-                {
-                    Console.Write(node.data + " ---> ");
-                    node = node.next;
-                }
-                Console.WriteLine();
-                Console.WriteLine("-------------");
-                Console.WriteLine();
-
-            }
-
         }
+
+        public static class StackHelpers
+        {
+
+            static string operators = "*/+-()";
+            static bool isOperator(char symbol)
+            {
+                return operators.Contains(symbol);
+            }
+
+
+            private static int GetPriority(char symbol)
+            {
+                switch (symbol)
+                {
+                    case '(':
+                        return 0;
+                    case '+':
+                    case '-':
+                        return 1;
+                    case '/':
+                    case '*':
+                        return 2;
+                    default:
+                        return -1;
+                }
+            }
+
+
+            internal static string infixToPrefix(string input)
+            {
+                var result = "";
+                // переворачиваем строку
+                for (var i = input.Length - 1; i >= 0; i--)
+                {
+                    if (input[i] == ')')
+                    {
+                        result += '(';
+                    }
+                    else if (input[i] == '(')
+                    {
+                        result += ')';
+                    }
+                    else
+                    {
+                        result += input[i];
+                    }
+                }
+
+
+                // транслируем
+                result = infixToPostfix(result);
+                //переворачиваем
+                var charArray = result.ToCharArray();
+                Array.Reverse(charArray);
+                return new string(charArray);
+            }
+
+            internal static string infixToPostfix(string input)
+            {
+                var result = "";
+                var stack = new Stack<char>();
+
+                foreach (var symbol in input)
+                {
+                    if (!isOperator(symbol))
+                    {
+                        result += symbol;
+                    }
+                    else
+                    {
+                        var symbolPriority = GetPriority(symbol);
+                        if (stack.IsEmpty || symbol == '(')
+                        {
+                            stack.Push(symbol);
+                            continue;
+                        }
+
+
+                        var current = stack.Peek();
+                        var currentPriority = GetPriority(current);
+
+
+                        if (symbol == ')')
+                        {
+                            while (!stack.IsEmpty)
+                            {
+                                if (current == '(')
+                                {
+                                    // нашли открывающуюся скобку, завершаем цикл
+                                    stack.Pop();
+                                    break;
+                                }
+
+                                result += current;
+                                // извлекаем элемент из стека для следующей итерации
+                                stack.Pop();
+                                current = stack.Peek();
+                            }
+
+                            continue;
+                        }
+
+                        // если приоритет меньше - помещаем в стек
+                        if (currentPriority < symbolPriority)
+                        {
+                            stack.Push(symbol);
+                        }
+                        else
+                        {
+                            // извлекаем все элементы и помещаем в рузультат
+                            // пока приоритет больше или равен, или
+                            // находим открывающуюся скобку
+
+
+                            while (currentPriority >= symbolPriority)
+                            {
+                                if (current != '(')
+                                {
+                                    result += current;
+                                }
+
+                                stack.Pop();
+                                if (stack.IsEmpty)
+                                {
+                                    break;
+                                }
+
+                                current = stack.Peek();
+                                currentPriority = GetPriority(current);
+                            }
+
+                            stack.Push(symbol);
+                        }
+                    }
+                }
+
+                while (!stack.IsEmpty)
+                {
+                    result += stack.Peek();
+                    stack.Pop();
+                }
+
+                return result;
+            }
+        }
+
 
         static void Main(string[] args)
         {
-            var testQueue = new Queue<string>();
-
-            // добавим узлы с приоритетами и без
-            testQueue.AddNodeWithoutPriority("1: Без приоритета");
-            testQueue.AddNodeWithoutPriority("3: Без приоритета");
-            testQueue.AddNodeWithPriority("4: Приоритет 3 - наивысший", 3);
-            testQueue.AddNodeWithoutPriority("5: Без приоритета");
-            testQueue.AddNodeWithPriority("6: Приоритет 2", 2);
-            testQueue.AddNodeWithPriority("7: Приоритет 2", 2);
-            testQueue.AddNodeWithPriority("8: Приоритет 1", 1);
-
-
-            testQueue.WriteInfo();
-
-            // поиск по значению
-            const string searchElement = "5: Без приоритета";
-            testQueue.FindNodePosition(searchElement);
-
-            // удаление узла
-            testQueue.DeleteNode("5: Без приоритета");
-
-            testQueue.WriteInfo();
-
+            var infixInput = "a+b/(c-d)";
+            Console.WriteLine(infixInput);
+            Console.WriteLine("postfix result = " + StackHelpers.infixToPostfix(infixInput));
+            Console.WriteLine("prefix result = " + StackHelpers.infixToPrefix(infixInput));
         }
     }
 }
